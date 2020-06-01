@@ -26,7 +26,7 @@ def initialize_directories(config):
                 "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
             )
         if not os.path.isdir(MEDIA_DIR):
-            MEDIA_DIR = "./media"
+            MEDIA_DIR = os.path.join(os.getcwd(), "media")
         print(
             f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
             "this behavior with the --media_dir flag."
@@ -71,7 +71,7 @@ ITALIC = 'ITALIC'
 OBLIQUE = 'OBLIQUE'
 BOLD = 'BOLD'
 
-TEX_USE_CTEX = False
+TEX_USE_CTEX = True
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
