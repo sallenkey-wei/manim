@@ -370,7 +370,7 @@ class FourierOfPiSymbol(FourierCirclesScene):
                 # mcsw / np.sqrt(k),
                 mcsw / k,
                 mcsw,
-            ))
+                ))
         return circles
 
     def get_path(self):
@@ -431,7 +431,7 @@ class FourierOfTexPaths(FourierOfPiSymbol, MovingCameraScene):
                     Transform(circles, static_circles, remover=True),
                     frame.set_height, 1.5 * name.get_height(),
                     frame.move_to, path,
-                )
+                                      )
 
                 self.add(new_vectors, new_circles)
                 self.vector_clock.set_value(0)
@@ -465,7 +465,9 @@ class FourierOfTrebleClef(FourierOfPiSymbol):
         "n_vectors": 101,
         "run_time": 10,
         "start_drawn": True,
-        "file_name": "TrebleClef",
+        #"file_name": "TrebleClef",
+        #"file_name": "traffic_signal.svg",
+        "file_name": "badapple.svg",
         "height": 7.5,
     }
 
@@ -939,3 +941,95 @@ class ExplainCircleAnimations(FourierCirclesScene):
         self.configure_path(path)
         path.scale(1.5, about_edge=DOWN)
         return path
+
+
+class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
+    CONFIG = {
+        "n_vectors": 101,
+        "run_time": 10,
+        "start_drawn": True,
+        "file_name": "traffic_signal.svg",
+        #"file_name": "badapple.svg",
+        "height": 7.5,
+        "time_per_symbol": 5,
+        "slow_factor": 1 / 15,
+        "parametric_function_step_size": 0.01,
+        "drawn_color": YELLOW,
+        "drawn_path_stroke_width": 2,
+    }
+
+    def construct(self):
+        pathList = self.get_path()
+
+        frame = self.camera.frame
+        frame.save_state()
+
+        vectors = VGroup(VectorizedPoint())
+        circles = VGroup(VectorizedPoint())
+        all_objects = VGroup()
+
+        for path in pathList:
+            for subpath in path.get_subpaths():
+                sp_mob = VMobject()
+                sp_mob.set_points(subpath)
+                coefs = self.get_coefficients_of_path(sp_mob)
+                new_vectors = self.get_rotating_vectors(
+                    coefficients=coefs
+                )
+                new_circles = self.get_circles(new_vectors)
+                self.set_decreasing_stroke_widths(new_circles)
+
+                drawn_path = self.get_drawn_path(new_vectors)
+                drawn_path.clear_updaters()
+                drawn_path.set_stroke(self.drawn_color, self.drawn_path_stroke_width)
+                all_objects.add(drawn_path)
+
+                '''
+                static_vectors和new_vectors是两块不同的内存，外观样式完全一样，
+                但是static_vectors没有new_vectors的update()函数，也就是不会动
+                '''
+                static_vectors = VMobject().become(new_vectors)
+                static_circles = VMobject().become(new_circles)
+                # static_circles = new_circles.deepcopy()
+                # static_vectors.clear_updaters()
+                # static_circles.clear_updaters()
+
+                self.play(
+                    #remover=True表示只显示Transform的动画，动画播放完毕vectors和static_vectors都从屏幕上删除掉
+                    Transform(vectors, static_vectors, remover=True),
+                    Transform(circles, static_circles, remover=True),
+                    frame.set_height, 1.5 * sp_mob.get_height(),
+                    frame.move_to, sp_mob,
+                )
+
+                self.add(new_vectors, new_circles)
+                self.vector_clock.set_value(0)
+                self.play(
+                    ShowCreation(drawn_path),
+                    rate_func=linear,
+                    run_time=self.time_per_symbol
+                )
+                self.remove(new_vectors, new_circles)
+                self.add(static_vectors, static_circles)
+
+                vectors = static_vectors
+                circles = static_circles
+        self.play(
+            FadeOut(vectors),
+            FadeOut(circles),
+            Restore(frame),
+            run_time=2
+        )
+        self.wait(3)
+        self.play(FadeOutAndShiftDown(all_objects), run_time=2)
+
+    def get_path(self):
+        shape = self.get_shape()
+        pathList = []
+        path = shape.family_members_with_points()
+        for subpath in path:
+            subpath.set_height(self.height)
+            subpath.set_fill(opacity=0)
+            subpath.set_stroke(WHITE, 0)
+            pathList.append(subpath)
+        return pathList

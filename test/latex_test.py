@@ -10,5 +10,6 @@ class Latex(Scene):
         )
         base1.match_color(title)
         VGroup(title, base1).arrange(DOWN)
-        self.play(Write(title), FadeInFrom(base1, UP))
+        #self.play(Write(title), FadeInFrom(base1, UP))
+        self.play(Transform(title, base1, remover = True))
         self.wait(1)
