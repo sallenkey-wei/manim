@@ -959,8 +959,6 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
     }
 
     def construct(self):
-        pathList = self.get_path()
-
         frame = self.camera.frame
         frame.save_state()
 
@@ -968,7 +966,7 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
         circles = VGroup(VectorizedPoint())
         all_objects = VGroup()
 
-        for path in pathList:
+        for path in self.get_path():
             for subpath in path.get_subpaths():
                 sp_mob = VMobject()
                 sp_mob.set_points(subpath)
@@ -1007,7 +1005,7 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
                 self.play(
                     ShowCreation(drawn_path),
                     rate_func=linear,
-                    run_time=self.time_per_symbol
+                    run_time=1/self.slow_factor
                 )
                 self.remove(new_vectors, new_circles)
                 self.add(static_vectors, static_circles)
@@ -1025,11 +1023,16 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
 
     def get_path(self):
         shape = self.get_shape()
-        pathList = []
         path = shape.family_members_with_points()
+        subpath_heightList = []
         for subpath in path:
-            subpath.set_height(self.height)
+            subpath_heightList.append(subpath.get_height())
             subpath.set_fill(opacity=0)
             subpath.set_stroke(WHITE, 0)
-            pathList.append(subpath)
-        return pathList
+
+        Max_subpath_height = max(subpath_heightList)
+        self.scale_factor = self.height / Max_subpath_height
+
+        for subpath in path:
+            subpath.scale(self.scale_factor, about_point=self.center_point)
+        return path
