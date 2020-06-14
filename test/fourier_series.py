@@ -438,7 +438,7 @@ class FourierOfTexPaths(FourierOfPiSymbol, MovingCameraScene):
                 self.play(
                     ShowCreation(drawn_path),
                     rate_func=linear,
-                    run_time=self.time_per_symbol
+                    run_time=1/self.slow_factor
                 )
                 self.remove(new_vectors, new_circles)
                 self.add(static_vectors, static_circles)
@@ -956,6 +956,7 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
         "parametric_function_step_size": 0.01,
         "drawn_color": YELLOW,
         "drawn_path_stroke_width": 2,
+        "is_avg_speed": False
     }
 
     def construct(self):
@@ -1002,10 +1003,15 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
 
                 self.add(new_vectors, new_circles)
                 self.vector_clock.set_value(0)
+                if self.is_avg_speed is True:
+                    sub_slow_factor = self.slow_factor * self.shape_point_num / sp_mob.get_num_points()
+                else:
+                    sub_slow_factor = self.slow_factor
+                self.slow_factor_tracker.set_value(sub_slow_factor)
                 self.play(
                     ShowCreation(drawn_path),
                     rate_func=linear,
-                    run_time=1/self.slow_factor
+                    run_time=1/sub_slow_factor
                 )
                 self.remove(new_vectors, new_circles)
                 self.add(static_vectors, static_circles)
@@ -1024,15 +1030,17 @@ class FourierOfMySVG(FourierOfTrebleClef, MovingCameraScene):
     def get_path(self):
         shape = self.get_shape()
         path = shape.family_members_with_points()
+        self.shape_point_num = 0
         subpath_heightList = []
         for subpath in path:
             subpath_heightList.append(subpath.get_height())
             subpath.set_fill(opacity=0)
             subpath.set_stroke(WHITE, 0)
+            self.shape_point_num += subpath.get_num_points()
 
-        Max_subpath_height = max(subpath_heightList)
-        self.scale_factor = self.height / Max_subpath_height
+        max_subpath_height = max(subpath_heightList)
+        scale_factor = self.height / max_subpath_height
 
         for subpath in path:
-            subpath.scale(self.scale_factor, about_point=self.center_point)
+            subpath.scale(scale_factor, about_point=self.center_point)
         return path

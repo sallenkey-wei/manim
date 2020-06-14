@@ -17,7 +17,7 @@ class Latex(Scene):
 
         self.play(FadeIn(eq_left01), FadeIn(equal), FadeIn(eq_right01))
         #self.wait(1)
-        self.play(ReplacementTransform(eq_left01, eq_left02), run_time=2)
+        self.play(ReplacementTransform(eq_left01, eq_left02), run_time=5)
         self.play(ReplacementTransform(eq_right01, eq_right02), run_time=2)
         #self.wait(0.5)
         self.play(ApplyMethod(equation02.scale, 2.4))
